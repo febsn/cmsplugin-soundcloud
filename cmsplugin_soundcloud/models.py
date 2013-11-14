@@ -1,5 +1,6 @@
 import re
 from django.db import models
+from .settings import *
 from django.conf import settings
 from django.template import Template
 from django.utils.translation import ugettext_lazy as _
@@ -12,9 +13,8 @@ from urllib2 import urlopen
 
 
 # use CMSPLUGIN_SOUNDCLOUD_COLORS to override COLORS
-COLORS = getattr(settings, 'CMSPLUGIN_SOUNDCLOUD_COLORS', (
-    ('ff6600', _('default')),
-))
+COLORS = getattr(settings, 'CMSPLUGIN_SOUNDCLOUD_COLORS',
+                            CMSPLUGIN_SOUNDCLOUD_COLORS)
 
 
 OEMBED_URL_FORMAT = 'http://soundcloud.com/oembed?url=%s&amp;format=json'
