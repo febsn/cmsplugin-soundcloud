@@ -8,13 +8,19 @@ from django.utils.translation import ugettext_lazy as _
 from cms.models import CMSPlugin
 
 from json import load
+from urllib import urlencode
 from urllib2 import urlopen
+from urlparse import urlsplit, urlunsplit, parse_qsl
 
 
 
 # use CMSPLUGIN_SOUNDCLOUD_COLORS to override COLORS
 COLORS = getattr(settings, 'CMSPLUGIN_SOUNDCLOUD_COLORS',
                             CMSPLUGIN_SOUNDCLOUD_COLORS)
+
+# use CMSPLUGIN_SOUNDCLOUD_HEIGHTS to override HEIGHTS
+HEIGHTS = getattr(settings, 'CMSPLUGIN_SOUNDCLOUD_HEIGHTS',
+                            CMSPLUGIN_SOUNDCLOUD_HEIGHTS)
 
 
 OEMBED_URL_FORMAT = 'http://soundcloud.com/oembed?url=%s&amp;format=json'
@@ -37,7 +43,12 @@ class SoundCloud(CMSPlugin):
                         help_text=_('Main color of the widget.'))
     auto_play     = models.BooleanField(_('Play automatically'))
     show_artwork  = models.BooleanField(_('Show artwork'))
-    params        = models.TextField(editable=False)
+    hide_related  = models.BooleanField(_('Hide related'))
+    visual        = models.BooleanField(_('Visual mode'))
+    height        = models.IntegerField(_('Height'), choices=HEIGHTS,
+                        default=HEIGHTS[0][0],
+                        help_text=_('Height of widhte in visual mode.'))
+    src           = models.TextField(editable=False)
 
     render_template = 'cmsplugin_soundcloud.html'
 
@@ -51,21 +62,15 @@ class SoundCloud(CMSPlugin):
         self.title         = properties['title']
         self.description   = properties['description']
         self.thumbnail_url = properties['thumbnail_url']
-        params = []
-        # read only some particular attributes from html
-        # (no need to trust the content we get)
-        for (param, name) in re.findall(r'((width|height|src)="[^"]*")', properties['html']):
-            if name == 'src':
-                params.append(re.sub(
-                    r'&.*"',
-                    '&amp;color=%s&amp;auto_play=%s&amp;show_artwork=%s"' % (
-                        self.color,
-                        self.auto_play    and 'true' or 'false',
-                        self.show_artwork and 'true' or 'false',
-                    ),
-                    param))
-            else:
-                params.append(param)
-        self.params        = ' '.join(params)
+        if not self.visual:
+            self.height    = 166
+        url = urlsplit(re.findall(r'src="([^"]*)"', properties['html'])[0])
+        qs  = dict(parse_qsl(url.query))
+        qs['color']        = self.color
+        qs['auto_play']    = self.auto_play    and 'true' or 'false'
+        qs['show_artwork'] = self.show_artwork and 'true' or 'false'
+        qs['hide_related'] = self.hide_related and 'true' or 'false'
+        qs['visual']       = self.visual       and 'true' or 'false'
+        self.src = urlunsplit((url.scheme, url.netloc, url.path, urlencode(qs), url.fragment))
         super(SoundCloud, self).save(*args, **kwargs)
 

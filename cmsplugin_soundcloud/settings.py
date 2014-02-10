@@ -9,3 +9,10 @@ CMSPLUGIN_SOUNDCLOUD_COLORS = (
     ('ff6600', _('Default')),
 )
 
+# Set of available heights for the widget
+CMSPLUGIN_SOUNDCLOUD_HEIGHTS = (
+    (300, 300),
+    (450, 450),
+    (600, 600),
+)
+
