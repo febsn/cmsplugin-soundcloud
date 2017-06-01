@@ -16,6 +16,7 @@ class SoundCloudPlugin(CMSPluginBase):
     model = SoundCloud
     name = _('SoundCloud')
     text_enabled = True
+    render_template = 'cmsplugin_soundcloud/cmsplugin_soundcloud.html'
 
     def render(self, context, instance, placeholder):
         context.update({'plugin_soundcloud': instance})

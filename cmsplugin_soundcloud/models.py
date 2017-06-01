@@ -7,10 +7,18 @@ from django.utils.translation import ugettext_lazy as _
 
 from cms.models import CMSPlugin
 
-from json import load
-from urllib import urlencode
-from urllib2 import urlopen
-from urlparse import urlsplit, urlunsplit, parse_qsl
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    # py2
+    from urllib import urlencode
+
+try:
+    from urllib.parse import urlsplit, urlunsplit, parse_qsl
+except ImportError:
+    from urlparse import urlsplit, urlunsplit, parse_qsl
+
+import requests
 
 
 
@@ -27,7 +35,7 @@ OEMBED_URL_FORMAT = 'http://soundcloud.com/oembed?url=%s&amp;format=json'
 
 
 def get_sound_properties(url):
-    return load(urlopen(OEMBED_URL_FORMAT % url))
+    return requests.get(OEMBED_URL_FORMAT % url).json()
 
 
 class SoundCloud(CMSPlugin):
@@ -49,8 +57,6 @@ class SoundCloud(CMSPlugin):
                         default=HEIGHTS[0][0],
                         help_text=_('Height of widhte in visual mode.'))
     src           = models.TextField(editable=False)
-
-    render_template = 'cmsplugin_soundcloud.html'
 
     def __unicode__(self):
         return self.title
